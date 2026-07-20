@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+<title>Plano de tienda</title>
+<style>
+  :root{
+    --bg:#FFF7EC;
+    --card:#FFFFFF;
+    --ink:#2B2438;
+    --muted:#8B7E9A;
+    --coral:#FF6B6B;
+    --turquoise:#3FBFB0;
+    --sun:#FFC93C;
+    --grape:#8B6FEE;
+    --mint:#3CCB8F;
+    --pink:#FF8FB1;
+    --line:#EFE4D6;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif;
+    --font-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --font-mono: 'SF Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overscroll-behavior:none;background:var(--bg);}
+  body{font-family:var(--font);color:var(--ink);}
+  input,select,textarea,button{font-family:var(--font);font-size:16px;}
+  #app{height:100vh;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;}
+
+  header{padding:16px 18px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  #storeName{font-size:26px;font-weight:900;letter-spacing:-0.5px;background:transparent;border:none;color:var(--ink);outline:none;padding:0;max-width:60vw;}
+  .meta{font-size:13px;color:var(--muted);margin-top:6px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-weight:600;}
+  .meta label{display:flex;align-items:center;gap:5px;}
+  .num{width:60px;background:#fff;border:2px solid var(--line);border-radius:10px;color:var(--ink);text-align:center;padding:5px 4px;font-weight:700;}
+  .num:focus{border-color:var(--grape);outline:none;}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:999px;padding:10px 16px;
+    font-size:13.5px;font-weight:800;cursor:pointer;white-space:nowrap;color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.12);}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12);}
+  .btn.coral{background:var(--coral);}
+  .btn.turquoise{background:var(--turquoise);}
+  .btn.grape{background:var(--grape);}
+  .btn.sun{background:var(--sun);color:var(--ink);}
+  .btn.pink{background:var(--pink);}
+  .btn.mint{background:var(--mint);}
+  .btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none;}
+  .icon-btn{background:#fff;border:2px solid var(--line);border-radius:999px;width:34px;height:34px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;color:var(--coral);font-size:15px;}
+
+  .toolbar{display:flex;gap:8px;padding:8px 18px 14px;flex-wrap:wrap;align-items:center;}
+  .toolbar .lbl{font-size:11.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-right:2px;}
+
+  .body-row{flex:1;display:flex;flex-direction:column;}
+  .canvas-col{flex:1 1 auto;padding:0 18px 18px;min-width:0;}
+  #canvas{position:relative;width:100%;background:#fff;border:3px dashed var(--line);border-radius:18px;
+    background-image:radial-gradient(circle, #F1E9DA 1.5px, transparent 1.5px);}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;font-weight:600;}
+
+  .zone{position:absolute;border-radius:14px;border:2px dashed rgba(43,36,56,.25);z-index:1;cursor:grab;touch-action:pinch-zoom;box-sizing:border-box;}
+  .zone.sel{border-color:var(--ink);}
+  .zone .zlabel{position:absolute;top:6px;left:10px;font-size:11.5px;font-weight:900;color:var(--ink);opacity:.7;}
+
+  .photo{position:absolute;background-size:cover;background-position:center;border-radius:12px;
+    border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.2);cursor:grab;touch-action:pinch-zoom;z-index:3;min-width:20px;min-height:20px;}
+  .photo.sel{outline:3px solid var(--turquoise);outline-offset:2px;z-index:5;}
+
+  .shape{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:grab;touch-action:pinch-zoom;user-select:none;
+    background:#fff;border:1.5px solid var(--ink);padding:0;min-width:3px;min-height:3px;z-index:2;}
+  .shape.sel{outline:3px solid var(--ink);outline-offset:2px;z-index:5;}
+  .shape .lbl2{font-size:10px;text-align:center;line-height:1.05;padding:0 2px;text-shadow:0 1px 2px rgba(0,0,0,.15);}
+
+  .note{position:absolute;background:transparent;border:1.5px dashed rgba(43,36,56,.2);border-radius:8px;
+    padding:3px 5px;font-weight:800;white-space:pre-wrap;word-break:break-word;line-height:1.2;
+    cursor:grab;touch-action:pinch-zoom;z-index:4;min-width:24px;min-height:14px;}
+  .note.sel{border-color:var(--grape);background:rgba(255,255,255,.6);z-index:6;}
+
+  .handle-rotate{position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;
+    background:var(--mint);border:3px solid #fff;cursor:grab;touch-action:pinch-zoom;box-shadow:0 2px 4px rgba(0,0,0,.3);z-index:6;}
+  .handle-rotate-stick{position:absolute;top:-15px;left:50%;width:2px;height:11px;background:var(--mint);transform:translateX(-50%);z-index:6;}
+  .handle-resize{position:absolute;bottom:-13px;right:-13px;width:28px;height:28px;border-radius:8px;
+    background:var(--sun);border:3px solid #fff;cursor:nwse-resize;touch-action:pinch-zoom;box-shadow:0 2px 4px rgba(0,0,0,.3);z-index:6;}
+  .handle-delete{position:absolute;top:-14px;left:-14px;width:28px;height:28px;border-radius:50%;background:var(--coral);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;touch-action:pinch-zoom;
+    border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);z-index:7;font-weight:900;}
+  .note.editing{background:#fff;border:2px solid var(--grape);box-shadow:0 4px 10px rgba(0,0,0,.15);cursor:text;
+    touch-action:auto;-webkit-user-select:text;user-select:text;outline:none;}
+  .handle-edit{position:absolute;top:-10px;right:-10px;width:21px;height:21px;border-radius:50%;background:var(--grape);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;cursor:pointer;touch-action:pinch-zoom;
+    border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);z-index:7;}
+
+  .panel-col{flex:0 0 auto;min-width:0;padding:0 18px 18px;}
+  .panel-card{background:#fff;border-radius:18px;padding:16px;border:2px solid var(--line);}
+  .panel-empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 6px;font-weight:600;}
+  .panel-title{font-size:19px;font-weight:900;background:transparent;border:none;color:var(--ink);flex:1;outline:none;
+    border-bottom:2px solid var(--line);padding:2px 0;}
+  .row{display:flex;align-items:center;gap:8px;}
+  .field-row{display:flex;gap:12px;margin:10px 0 6px;font-size:12.5px;color:var(--muted);align-items:center;flex-wrap:wrap;font-weight:700;}
+  .swatches{display:flex;gap:7px;margin:10px 0 4px;flex-wrap:wrap;}
+  .swatch{width:26px;height:26px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+  .swatch.active{border-color:var(--ink);}
+  textarea.noteedit{width:100%;min-height:110px;background:#FBF7FF;border:2px solid var(--line);
+    border-radius:12px;color:var(--ink);padding:10px;font-size:14px;font-weight:700;resize:vertical;}
+  .note-tip{font-size:11.5px;color:var(--muted);margin-top:8px;font-weight:600;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(43,36,56,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10;}
+  .modal-bg.hidden{display:none;}
+  .modal{background:var(--bg);border-radius:20px;padding:20px;width:100%;max-width:440px;max-height:75vh;overflow-y:auto;border:2px solid var(--line);}
+  .modal h3{font-size:20px;font-weight:900;margin:0;}
+  .proj-row{display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:10px 12px;margin-bottom:8px;border:2px solid var(--line);}
+  .proj-row .pname{flex:1;font-size:14px;font-weight:800;}
+  .proj-row .pdate{font-size:11px;color:var(--muted);font-weight:600;}
+  .proj-row.active{border-color:var(--turquoise);background:#EAFBF9;}
+
+  .nov-card{background:#fff;border-radius:16px;border:2px solid var(--line);overflow:hidden;display:flex;flex-direction:column;}
+  .nov-card img{width:100%;height:120px;object-fit:cover;display:block;}
+  .nov-card textarea{border:none;resize:none;padding:8px;font-size:12.5px;font-weight:700;color:var(--ink);min-height:50px;background:transparent;}
+  .nov-card .nov-actions{display:flex;justify-content:flex-end;padding:4px 6px;}
+
+  @media (max-width:700px){
+    #novedadesGrid{grid-template-columns:1fr !important;}
+  }
+
+  .fmt-row{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;}
+  .fmt-btn{width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--ink);
+    font-weight:800;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+  .fmt-btn.active{background:var(--grape);border-color:var(--grape);color:#fff;}
+  .fmt-select{border:2px solid var(--line);border-radius:10px;padding:6px 8px;font-weight:700;color:var(--ink);background:#fff;}
+  .range-row{display:flex;align-items:center;gap:10px;margin:8px 0;}
+  .range-row input[type=range]{flex:1;accent-color:var(--grape);}
+
+  @media (max-width:700px){
+    .body-row{flex-direction:column;}
+    .canvas-col{padding:0 14px 14px;min-width:0;}
+    .panel-col{padding:0 14px 14px;min-width:0;}
+    header{padding:14px 14px 8px;}
+    .toolbar{padding:6px 14px 12px;}
+    #storeName{font-size:21px;}
+  }
+
+  .print-only{display:none;}
+  @media print{
+    body{background:#fff;}
+    header, .toolbar, .panel-col, .hint, .modal-bg{display:none !important;}
+    #app{height:auto;overflow:visible;display:block;}
+    .body-row{display:block;}
+    .canvas-col{padding:0;}
+    .print-only{display:block;font-family:var(--font);font-weight:900;font-size:20px;margin-bottom:10px;color:#000;}
+    #canvas{border:1.5px solid #000;background:#fff;background-image:none;box-shadow:none;
+      width:100%;max-width:100%;page-break-inside:avoid;}
+    .shape, .zone, .note, .photo{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .handle-rotate, .handle-rotate-stick, .handle-resize, .handle-delete{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <input id="storeName" />
+      <div class="meta">
+        <span id="saveStatus">Guardado</span>
+        <span id="projectBadge" style="background:var(--turquoise);color:#fff;padding:3px 10px;border-radius:999px;font-weight:800;font-size:11.5px;"></span>
+        <label>Largo <input class="num" id="lengthM" type="number" step="0.5" /> m</label>
+        <label>Ancho <input class="num" id="widthM" type="number" step="0.5" /> m</label>
+      </div>
+      <div class="meta" id="textStyleBar" style="margin-top:8px;">
+        <span style="font-weight:800;color:var(--ink);">Texto nuevo</span>
+        <label>Tamaño <input class="num" id="tsSize" type="number" step="1" style="width:52px;" /> px</label>
+        <button class="fmt-btn" id="tsBold" style="width:30px;height:30px;">B</button>
+        <button class="fmt-btn" id="tsItalic" style="width:30px;height:30px;font-style:italic;">I</button>
+        <button class="fmt-btn" id="tsUnderline" style="width:30px;height:30px;text-decoration:underline;">U</button>
+        <button class="fmt-btn" id="tsLeft" style="width:30px;height:30px;">⟸</button>
+        <button class="fmt-btn" id="tsCenter" style="width:30px;height:30px;">≡</button>
+        <button class="fmt-btn" id="tsRight" style="width:30px;height:30px;">⟹</button>
+        <select class="fmt-select" id="tsFont">
+          <option value="body">Redonda</option>
+          <option value="serif">Clásica</option>
+          <option value="mono">Monoespaciada</option>
+        </select>
+        <span class="swatches" id="tsSwatches" style="margin:0;"></span>
+      </div>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn pink" id="btnSaveProject">💾 Guardar</button>
+      <button class="btn ghost" id="btnPrint" style="border-color:var(--ink);color:var(--ink);">🖨️ Imprimir</button>
+      <button class="btn turquoise" id="btnProjects">📁 Proyectos</button>
+      <button class="btn grape" id="btnNovedades">🖼️ Novedades</button>
+      <button class="btn mint" id="btnNewProject">➕ Nuevo proyecto</button>
+      <button class="btn coral" id="btnClearPlan">🧹 Vaciar</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <span class="lbl">Añadir</span>
+    <button class="btn turquoise" id="addRect">▧ Columnas</button>
+    <button class="btn grape" id="addCirc">⬤ Círculo</button>
+    <button class="btn ghost" id="addWall" style="border-color:var(--mint);color:var(--mint);">▬ Pared</button>
+    <button class="btn ghost" id="add120" style="border-color:var(--coral);color:var(--coral);">▭ 120x30</button>
+    <button class="btn ghost" id="add60" style="border-color:var(--sun);color:var(--sun);">▭ 60x30</button>
+    <button class="btn sun" id="addNote">✎ Texto</button>
+    <button class="btn ghost" id="addZone" style="border-color:var(--pink);color:var(--pink);">▭ Zona</button>
+    <button class="btn ghost" id="addPhoto" style="border-color:var(--turquoise);color:var(--turquoise);">📷 Foto</button>
+    <input type="file" id="photoInput" style="display:none;" />
+  </div>
+
+  <div class="body-row">
+    <div class="panel-col"><div class="panel-card" id="panel"></div></div>
+    <div class="canvas-col">
+      <div id="printTitle" class="print-only"></div>
+      <div id="canvas"></div>
+      <div class="hint">arrastra para mover · el punto verde gira · la esquina amarilla cambia el tamaño · la ✕ roja elimina</div>
+    </div>
+  </div>
+
+  <div class="modal-bg hidden" id="projectsModalBg">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px;">
+        <h3>Proyectos</h3>
+        <button class="icon-btn" id="btnCloseProjects">✕</button>
+      </div>
+      <div id="projectsList"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg hidden" id="novedadesModalBg">
+    <div class="modal" style="max-width:600px;">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px;">
+        <h3>Novedades de esta semana</h3>
+        <button class="icon-btn" id="btnCloseNovedades">✕</button>
+      </div>
+      <button class="btn grape" id="btnAddNovedad" style="margin-bottom:14px;">📷 Añadir foto</button>
+      <input type="file" id="novedadInput" style="display:none;" />
+      <div id="novedadesGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const COLORS = ["#FF6B6B","#3FBFB0","#8B6FEE","#FFC93C","#3CCB8F","#FF8FB1"];
+  const ZONE_COLORS = ["#FFD6DE","#CFF3EF","#E3DBFF","#FFF1C2","#D3F5E3","#FFE1EC"];
+  const uid = () => Math.random().toString(36).slice(2,10);
+
+  function defaultState(){
+    return {
+      storeName: "Mi tienda",
+      lengthM: 20, widthM: 10,
+      shapes: [
+        {id:uid(), type:"rect", x:6, y:10, w:120, h:60, rotation:0, color:"#1C1B22", label:"Mueble"},
+        {id:uid(), type:"circle", x:55, y:35, w:60, h:60, rotation:0, color:"#1C1B22", label:"Círculo"}
+      ],
+      notes: [
+        {id:uid(), text:"Novedad: camisetas verano ×12", x:10, y:65, w:22, fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"}
+      ],
+      zones: [],
+      photos: [],
+      novedades: [],
+      lastShapeSize: null,
+      textStyle: {fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"}
+    };
+  }
+
+  function loadState(){
+    try{
+      const activeId = localStorage.getItem("planos-proyecto-activo");
+      if(activeId){
+        const raw = localStorage.getItem("planos-proyecto:"+activeId);
+        if(raw){
+          const d = JSON.parse(raw).data;
+          d.shapes = (d.shapes||[]).map(s=>({rotation:0, ...s}));
+          d.notes = d.notes||[];
+          d.zones = d.zones||[];
+          d.photos = d.photos||[];
+          d.novedades = d.novedades||[];
+          d.textStyle = d.textStyle || {fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"};
+          return d;
+        }
+      }
+    }catch(e){}
+    try{
+      const raw = localStorage.getItem("tienda-plano-v2");
+      if(raw){
+        const d = JSON.parse(raw);
+        d.shapes = (d.shapes||[]).map(s=>({rotation:0, ...s}));
+        d.notes = d.notes||[];
+        d.zones = d.zones||[];
+        d.photos = d.photos||[];
+        d.novedades = d.novedades||[];
+        d.textStyle = d.textStyle || {fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"};
+        return d;
+      }
+    }catch(e){}
+    return defaultState();
+  }
+  let currentProjectId = localStorage.getItem("planos-proyecto-activo") || null;
+  let saveTimer=null;
+  function scheduleSave(){
+    document.getElementById("saveStatus").textContent = "Guardando…";
+    if(saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      localStorage.setItem("tienda-plano-v2", JSON.stringify(state));
+      if(currentProjectId){
+        const entry = {id:currentProjectId, name:state.storeName, savedAt:Date.now(), data:state};
+        localStorage.setItem("planos-proyecto:"+currentProjectId, JSON.stringify(entry));
+        const idx = loadProjectsIndex().map(p=> p.id===currentProjectId ? {id:p.id, name:state.storeName, savedAt:entry.savedAt} : p);
+        saveProjectsIndex(idx);
+      }
+      document.getElementById("saveStatus").textContent = "Guardado";
+      renderProjectBadge();
+    }, 400);
+  }
+  function loadProjectsIndex(){
+    try{ return JSON.parse(localStorage.getItem("planos-proyectos-index")||"[]"); }catch(e){ return []; }
+  }
+  function saveProjectsIndex(list){ localStorage.setItem("planos-proyectos-index", JSON.stringify(list)); }
+  function renderProjectBadge(){
+    const badge = document.getElementById("projectBadge");
+    if(!badge) return;
+    if(currentProjectId){
+      const idx = loadProjectsIndex().find(p=>p.id===currentProjectId);
+      badge.textContent = idx ? idx.name : state.storeName;
+      badge.style.background = "var(--turquoise)";
+      badge.style.color = "#fff";
+    } else {
+      badge.textContent = "Sin guardar como proyecto";
+      badge.style.background = "var(--sun)";
+      badge.style.color = "var(--ink)";
+    }
+  }
+
+  let state = loadState();
+  let sel = null; // {kind:'shape'|'note'|'zone'|'photo', id}
+  let dragging = null;
+  let editingNoteId = null;
+  let replacePhotoId = null;
+
+  const canvasEl = document.getElementById("canvas");
+  const panelEl = document.getElementById("panel");
+
+  function lengthCm(){ return Math.max(state.lengthM,0.01)*100; }
+  function widthCm(){ return Math.max(state.widthM,0.01)*100; }
+  function cmToPctX(cm){ return cm/lengthCm()*100; }
+  function cmToPctY(cm){ return cm/widthCm()*100; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  function renderHeaderValues(){
+    document.getElementById("storeName").value = state.storeName;
+    document.getElementById("lengthM").value = state.lengthM;
+    document.getElementById("widthM").value = state.widthM;
+    const ts = state.textStyle;
+    document.getElementById("tsSize").value = ts.fontSize;
+    document.getElementById("tsBold").classList.toggle("active", ts.bold!==false);
+    document.getElementById("tsItalic").classList.toggle("active", !!ts.italic);
+    document.getElementById("tsUnderline").classList.toggle("active", !!ts.underline);
+    document.getElementById("tsLeft").classList.toggle("active", ts.align==="left");
+    document.getElementById("tsCenter").classList.toggle("active", (ts.align||"center")==="center");
+    document.getElementById("tsRight").classList.toggle("active", ts.align==="right");
+    document.getElementById("tsFont").value = ts.font||"body";
+    const sw = document.getElementById("tsSwatches");
+    sw.innerHTML = ["#2B2438","#FF6B6B","#3FBFB0","#8B6FEE","#FF8FB1"].map(c=>
+      '<button class="swatch'+(c===ts.color?" active":"")+'" data-color="'+c+'" style="width:22px;height:22px;background:'+c+'"></button>').join("");
+    sw.querySelectorAll(".swatch").forEach(btn=>{
+      btn.addEventListener("click", ()=>{ state.textStyle.color=btn.dataset.color; scheduleSave(); renderHeaderValues(); });
+    });
+  }
+
+  function renderCanvas(){
+    canvasEl.style.aspectRatio = state.lengthM + " / " + state.widthM;
+    let html = "";
+    (state.zones||[]).forEach(z=>{
+      const isSel = sel && sel.kind==="zone" && sel.id===z.id;
+      html += '<div class="zone'+(isSel?" sel":"")+'" data-kind="zone" data-id="'+z.id+'" '+
+        'style="left:'+z.x+'%;top:'+z.y+'%;width:'+z.w+'%;height:'+z.h+'%;background:'+z.color+';">'+
+        '<span class="zlabel">'+escapeHtml(z.name||"")+'</span>';
+      if(isSel){
+        html += '<div class="handle-resize" data-handle="resize"></div>';
+        html += '<div class="handle-delete" data-handle="delete">✕</div>';
+      }
+      html += '</div>';
+    });
+    state.shapes.forEach(s=>{
+      const isSel = sel && sel.kind==="shape" && sel.id===s.id;
+      const w = cmToPctX(s.w), h = cmToPctY(s.h);
+      const radius = s.type==="circle" ? "50%" : "2px";
+      const fill = s.type==="column"
+        ? "repeating-linear-gradient(45deg, #fff, #fff 3px, var(--ink) 3px, var(--ink) 4px)"
+        : "#fff";
+      html += '<div class="shape'+(isSel?" sel":"")+'" data-kind="shape" data-id="'+s.id+'" '+
+        'style="left:'+s.x+'%;top:'+s.y+'%;width:'+w+'%;height:'+h+'%;border-radius:'+radius+';background:'+fill+';transform:rotate('+(s.rotation||0)+'deg);">';
+      if(isSel){
+        html += '<div class="handle-rotate" data-handle="rotate"></div><div class="handle-rotate-stick"></div>';
+        html += '<div class="handle-resize" data-handle="resize"></div>';
+        html += '<div class="handle-delete" data-handle="delete">✕</div>';
+      }
+      html += '</div>';
+    });
+    (state.photos||[]).forEach(ph=>{
+      const isSel = sel && sel.kind==="photo" && sel.id===ph.id;
+      const w = cmToPctX(ph.w), h = cmToPctY(ph.h);
+      html += '<div class="photo'+(isSel?" sel":"")+'" data-kind="photo" data-id="'+ph.id+'" '+
+        'style="left:'+ph.x+'%;top:'+ph.y+'%;width:'+w+'%;height:'+h+'%;transform:rotate('+(ph.rotation||0)+'deg);background-image:url('+ph.src+');">';
+      if(isSel){
+        html += '<div class="handle-rotate" data-handle="rotate"></div><div class="handle-rotate-stick"></div>';
+        html += '<div class="handle-resize" data-handle="resize"></div>';
+        html += '<div class="handle-delete" data-handle="delete">✕</div>';
+      }
+      html += '</div>';
+    });
+    const ts = state.textStyle;
+    state.notes.forEach(n=>{
+      const isSel = sel && sel.kind==="note" && sel.id===n.id;
+      const isEditing = editingNoteId===n.id;
+      const fam = n.font==="serif" ? "var(--font-serif)" : n.font==="mono" ? "var(--font-mono)" : "var(--font)";
+      const style = 'left:'+n.x+'%;top:'+n.y+'%;width:'+n.w+'%;font-size:'+(n.fontSize||14)+'px;color:'+(n.color||ts.color)+';'+
+        'font-family:'+fam+';font-weight:'+(n.bold===false?"600":"800")+';font-style:'+(n.italic?"italic":"normal")+';'+
+        'text-decoration:'+(n.underline?"underline":"none")+';text-align:'+(n.align||"center")+';';
+      const cls = "note"+(isSel?" sel":"")+(isEditing?" editing":"");
+      html += '<div class="'+cls+'" data-kind="note" data-id="'+n.id+'" style="'+style+'"'+
+        (isEditing ? ' contenteditable="true"' : '') + '>'+
+        escapeHtml(n.text||"");
+      if(isSel && !isEditing){
+        html += '<div class="handle-edit" data-handle="edit">✎</div>';
+        html += '<div class="handle-resize" data-handle="resize"></div>';
+        html += '<div class="handle-delete" data-handle="delete">✕</div>';
+      }
+      html += '</div>';
+    });
+    canvasEl.innerHTML = html;
+
+    if(editingNoteId){
+      const editEl = canvasEl.querySelector('[data-kind="note"][data-id="'+editingNoteId+'"]');
+      if(editEl){
+        editEl.focus();
+        const range = document.createRange();
+        range.selectNodeContents(editEl);
+        const selObj = window.getSelection();
+        selObj.removeAllRanges();
+        selObj.addRange(range);
+        editEl.addEventListener("input", ()=>{
+          const n = state.notes.find(x=>x.id===editingNoteId);
+          if(n){ n.text = editEl.innerText; scheduleSave(); }
+        });
+        editEl.addEventListener("blur", ()=>{
+          editingNoteId = null;
+          renderCanvas();
+        });
+        editEl.addEventListener("pointerdown", e=>{ e.stopPropagation(); });
+      }
+    }
+  }
+
+  function numField(id, value, width){
+    return '<input class="num" style="width:'+(width||60)+'px" type="number" inputmode="decimal" step="1" data-numfield="'+id+'" value="'+value+'" />';
+  }
+
+  function renderPanel(){
+    if(sel && sel.kind==="shape"){
+      const s = state.shapes.find(x=>x.id===sel.id);
+      if(!s){ sel=null; return renderPanel(); }
+      let sizeFields = s.type==="circle"
+        ? '<label class="row">Diámetro '+numField("s-w", s.w)+' cm</label>'
+        : '<label class="row">Largo '+numField("s-w", s.w)+' cm</label>'+'<label class="row">Ancho '+numField("s-h", s.h)+' cm</label>';
+      panelEl.innerHTML =
+        '<div class="row" style="margin-bottom:2px;">'+
+          '<input class="panel-title" id="shapeName" value="'+escapeHtml(s.label||"")+'" />'+
+          '<button class="icon-btn" id="btnRemoveShape" title="Eliminar">🗑</button>'+
+        '</div>'+
+        '<div class="field-row">'+sizeFields+'</div>'+
+        '<div class="field-row">Giro '+numField("s-rot", Math.round(s.rotation||0), 60)+' °</div>';
+
+      document.getElementById("shapeName").addEventListener("input", e=>{ s.label=e.target.value; scheduleSave(); renderCanvas(); });
+      document.getElementById("btnRemoveShape").addEventListener("click", ()=>{ state.shapes=state.shapes.filter(x=>x.id!==s.id); sel=null; scheduleSave(); renderAll(); });
+      panelEl.querySelector('[data-numfield="s-w"]').addEventListener("change", e=>{
+        const v=parseFloat(e.target.value); const nw = Math.max(10, isNaN(v)?s.w:v);
+        const nh = s.type==="circle" ? nw : s.h;
+        if(!collidesGroupRot("shapesPhotos", s.id, s.x, s.y, nw, nh, s.rotation)){
+          s.w=nw; s.h=nh; state.lastShapeSize={w:s.w,h:s.h};
+        }
+        scheduleSave(); renderAll();
+      });
+      const hField = panelEl.querySelector('[data-numfield="s-h"]');
+      if(hField) hField.addEventListener("change", e=>{
+        const v=parseFloat(e.target.value); const nh = Math.max(10, isNaN(v)?s.h:v);
+        if(!collidesGroupRot("shapesPhotos", s.id, s.x, s.y, s.w, nh, s.rotation)){
+          s.h=nh; state.lastShapeSize={w:s.w,h:s.h};
+        }
+        scheduleSave(); renderAll();
+      });
+      panelEl.querySelector('[data-numfield="s-rot"]').addEventListener("change", e=>{
+        s.rotation = parseFloat(e.target.value)||0; scheduleSave(); renderAll();
+      });
+      return;
+    }
+
+    if(sel && sel.kind==="note"){
+      const n = state.notes.find(x=>x.id===sel.id);
+      if(!n){ sel=null; return renderPanel(); }
+      let swatches = ["#2B2438","#FF6B6B","#3FBFB0","#8B6FEE","#FF8FB1"].map(c=>
+        '<button class="swatch'+(c===(n.color||"#2B2438")?" active":"")+'" data-color="'+c+'" style="background:'+c+'"></button>').join("");
+      panelEl.innerHTML =
+        '<div class="row" style="margin-bottom:8px;">'+
+          '<span class="panel-title" style="border-bottom:none;">Texto</span>'+
+          '<button class="icon-btn" id="btnRemoveNote" title="Eliminar">🗑</button>'+
+        '</div>'+
+        '<textarea class="noteedit" id="noteText" autofocus>'+escapeHtml(n.text||"")+'</textarea>'+
+        '<div class="fmt-row">'+
+          '<button class="fmt-btn'+(n.bold!==false?" active":"")+'" id="fmtBold" style="font-style:normal;">B</button>'+
+          '<button class="fmt-btn'+(n.italic?" active":"")+'" id="fmtItalic" style="font-style:italic;">I</button>'+
+          '<button class="fmt-btn'+(n.underline?" active":"")+'" id="fmtUnderline" style="text-decoration:underline;">U</button>'+
+          '<button class="fmt-btn'+((n.align||"center")==="left"?" active":"")+'" id="fmtLeft">⟸</button>'+
+          '<button class="fmt-btn'+((n.align||"center")==="center"?" active":"")+'" id="fmtCenter">≡</button>'+
+          '<button class="fmt-btn'+((n.align||"center")==="right"?" active":"")+'" id="fmtRight">⟹</button>'+
+        '</div>'+
+        '<div class="field-row">Fuente '+
+          '<select class="fmt-select" id="fmtFont">'+
+            '<option value="body"'+((n.font||"body")==="body"?" selected":"")+'>Redonda</option>'+
+            '<option value="serif"'+(n.font==="serif"?" selected":"")+'>Clásica</option>'+
+            '<option value="mono"'+(n.font==="mono"?" selected":"")+'>Monoespaciada</option>'+
+          '</select>'+
+        '</div>'+
+        '<div class="range-row">'+
+          '<span style="font-size:12px;color:var(--muted);font-weight:700;">Tamaño</span>'+
+          '<input type="range" id="fmtScale" min="4" max="150" step="1" value="'+Math.min(150,Math.max(4,Math.round(n.fontSize||14)))+'">'+
+          numField("n-fs", n.fontSize||14, 56)+
+        '</div>'+
+        '<div class="swatches">'+swatches+'</div>'+
+        '<div class="note-tip">Arrastra la esquina amarilla del texto en el plano para cambiar su ancho.</div>';
+
+      const taEl = document.getElementById("noteText");
+      taEl.addEventListener("input", e=>{ n.text=e.target.value; scheduleSave(); renderCanvas(); });
+      document.getElementById("btnRemoveNote").addEventListener("click", ()=>{ state.notes=state.notes.filter(x=>x.id!==n.id); sel=null; scheduleSave(); renderAll(); });
+      document.getElementById("fmtBold").addEventListener("click", ()=>{ n.bold = n.bold===false; scheduleSave(); renderAll(); });
+      document.getElementById("fmtItalic").addEventListener("click", ()=>{ n.italic = !n.italic; scheduleSave(); renderAll(); });
+      document.getElementById("fmtUnderline").addEventListener("click", ()=>{ n.underline = !n.underline; scheduleSave(); renderAll(); });
+      document.getElementById("fmtLeft").addEventListener("click", ()=>{ n.align="left"; scheduleSave(); renderAll(); });
+      document.getElementById("fmtCenter").addEventListener("click", ()=>{ n.align="center"; scheduleSave(); renderAll(); });
+      document.getElementById("fmtRight").addEventListener("click", ()=>{ n.align="right"; scheduleSave(); renderAll(); });
+      document.getElementById("fmtFont").addEventListener("change", e=>{ n.font=e.target.value; scheduleSave(); renderCanvas(); });
+      document.getElementById("fmtScale").addEventListener("input", e=>{ n.fontSize=parseFloat(e.target.value); scheduleSave(); renderCanvas(); });
+      document.getElementById("fmtScale").addEventListener("change", renderAll);
+      panelEl.querySelector('[data-numfield="n-fs"]').addEventListener("change", e=>{
+        const v=parseFloat(e.target.value); n.fontSize = isNaN(v)?n.fontSize:v; scheduleSave(); renderAll();
+      });
+      panelEl.querySelectorAll(".swatch").forEach(btn=>{
+        btn.addEventListener("click", ()=>{ n.color=btn.dataset.color; scheduleSave(); renderAll(); });
+      });
+      return;
+    }
+
+    if(sel && sel.kind==="zone"){
+      const z = state.zones.find(x=>x.id===sel.id);
+      if(!z){ sel=null; return renderPanel(); }
+      let swatches = ZONE_COLORS.map(c=>'<button class="swatch'+(c===z.color?" active":"")+'" data-zcolor="'+c+'" style="background:'+c+'"></button>').join("");
+      panelEl.innerHTML =
+        '<div class="row" style="margin-bottom:2px;">'+
+          '<input class="panel-title" id="zoneName" value="'+escapeHtml(z.name||"")+'" />'+
+          '<button class="icon-btn" id="btnRemoveZone" title="Eliminar">🗑</button>'+
+        '</div>'+
+        '<div class="swatches">'+swatches+'</div>'+
+        '<div class="note-tip" style="margin:10px 0;">Arrastra la zona para moverla, y la esquina amarilla para cambiar su tamaño.</div>'+
+        '<button class="btn grape" id="btnExtractZone" style="width:100%;justify-content:center;">📤 Extraer como proyecto nuevo</button>'+
+        '<div class="note-tip">Crea una semana independiente solo con lo que hay dentro de esta zona, sin borrar nada del plano actual.</div>';
+
+      document.getElementById("zoneName").addEventListener("input", e=>{ z.name=e.target.value; scheduleSave(); renderCanvas(); });
+      document.getElementById("btnRemoveZone").addEventListener("click", ()=>{ state.zones=state.zones.filter(x=>x.id!==z.id); sel=null; scheduleSave(); renderAll(); });
+      panelEl.querySelectorAll("[data-zcolor]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{ z.color=btn.dataset.zcolor; scheduleSave(); renderAll(); });
+      });
+      document.getElementById("btnExtractZone").addEventListener("click", ()=>extractZoneAsProject(z));
+      return;
+    }
+
+    if(sel && sel.kind==="photo"){
+      const ph = state.photos.find(x=>x.id===sel.id);
+      if(!ph){ sel=null; return renderPanel(); }
+      panelEl.innerHTML =
+        '<div class="row" style="margin-bottom:10px;">'+
+          '<span class="panel-title" style="border-bottom:none;">Foto</span>'+
+          '<button class="icon-btn" id="btnRemovePhoto" title="Eliminar">🗑</button>'+
+        '</div>'+
+        '<div style="width:100%;height:120px;border-radius:12px;background-image:url('+ph.src+');background-size:cover;background-position:center;margin-bottom:10px;border:2px solid var(--line);"></div>'+
+        '<div class="field-row">Largo '+numField("ph-w", Math.round(ph.w))+' cm</div>'+
+        '<div class="field-row">Alto '+numField("ph-h", Math.round(ph.h))+' cm</div>'+
+        '<div class="field-row">Giro '+numField("ph-rot", Math.round(ph.rotation||0), 60)+' °</div>'+
+        '<button class="btn turquoise" id="btnReplacePhoto" style="width:100%;justify-content:center;margin-top:6px;">🔄 Cambiar imagen</button>';
+
+      document.getElementById("btnRemovePhoto").addEventListener("click", ()=>{ state.photos=state.photos.filter(x=>x.id!==ph.id); sel=null; scheduleSave(); renderAll(); });
+      panelEl.querySelector('[data-numfield="ph-w"]').addEventListener("change", e=>{
+        const v=parseFloat(e.target.value); ph.w = isNaN(v)?ph.w:v; scheduleSave(); renderAll();
+      });
+      panelEl.querySelector('[data-numfield="ph-h"]').addEventListener("change", e=>{
+        const v=parseFloat(e.target.value); ph.h = isNaN(v)?ph.h:v; scheduleSave(); renderAll();
+      });
+      panelEl.querySelector('[data-numfield="ph-rot"]').addEventListener("change", e=>{
+        ph.rotation = parseFloat(e.target.value)||0; scheduleSave(); renderAll();
+      });
+      document.getElementById("btnReplacePhoto").addEventListener("click", ()=>{
+        replacePhotoId = ph.id;
+        document.getElementById("photoInput").click();
+      });
+      return;
+    }
+
+    panelEl.innerHTML = '<div class="panel-empty">🎨<br>Toca una figura, un texto, una zona o una foto del plano para editarlo aquí.</div>';
+  }
+
+  function renderAll(){ renderCanvas(); renderPanel(); }
+
+  // ---------- interacción táctil ----------
+  canvasEl.addEventListener("pointerdown", e=>{
+    const handle = e.target.closest("[data-handle]");
+    const el = e.target.closest("[data-kind]");
+    if(!el){ editingNoteId=null; sel=null; renderPanel(); renderCanvas(); return; }
+    const kind = el.dataset.kind, id = el.dataset.id;
+
+    if(handle && handle.dataset.handle==="delete"){
+      e.preventDefault();
+      if(kind==="shape") state.shapes = state.shapes.filter(x=>x.id!==id);
+      else if(kind==="zone") state.zones = state.zones.filter(x=>x.id!==id);
+      else if(kind==="photo") state.photos = state.photos.filter(x=>x.id!==id);
+      else state.notes = state.notes.filter(x=>x.id!==id);
+      sel = null; scheduleSave(); renderAll();
+      return;
+    }
+
+    if(handle && handle.dataset.handle==="edit"){
+      e.preventDefault();
+      editingNoteId = id;
+      renderCanvas();
+      return;
+    }
+
+    const wasAlreadySelected = sel && sel.kind===kind && sel.id===id;
+    editingNoteId = null;
+    sel = {kind, id};
+    const rect = canvasEl.getBoundingClientRect();
+
+    if(kind==="note"){
+      const n = state.notes.find(x=>x.id===id);
+      if(handle && handle.dataset.handle==="resize"){
+        dragging = {kind:"note", mode:"resize", id, startClientX:e.clientX, startW:n.w};
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        dragging = {kind:"note", mode:"move", id, offX:px-n.x, offY:py-n.y};
+      }
+    } else if(kind==="zone"){
+      const z = state.zones.find(x=>x.id===id);
+      if(handle && handle.dataset.handle==="resize"){
+        dragging = {kind:"zone", mode:"resize", id, startClientX:e.clientX, startClientY:e.clientY, startW:z.w, startH:z.h};
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        dragging = {kind:"zone", mode:"move", id, offX:px-z.x, offY:py-z.y};
+      }
+    } else if(kind==="photo"){
+      const ph = state.photos.find(x=>x.id===id);
+      if(handle && handle.dataset.handle==="resize"){
+        dragging = {kind:"photo", mode:"resize", id, startClientX:e.clientX, startClientY:e.clientY, startW:ph.w, startH:ph.h, rot:(ph.rotation||0)*Math.PI/180, pxPerCmX: rect.width/lengthCm(), pxPerCmY: rect.height/widthCm()};
+      } else if(handle && handle.dataset.handle==="rotate"){
+        const wPx=cmToPctX(ph.w)/100*rect.width, hPx=cmToPctY(ph.h)/100*rect.height;
+        const cx=rect.left+ph.x/100*rect.width+wPx/2, cy=rect.top+ph.y/100*rect.height+hPx/2;
+        dragging = {kind:"photo", mode:"rotate", id, cx, cy, startAngle:Math.atan2(e.clientY-cy,e.clientX-cx), startRotation:ph.rotation||0};
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        dragging = {kind:"photo", mode:"move", id, offX:px-ph.x, offY:py-ph.y};
+      }
+    } else {
+      const s = state.shapes.find(x=>x.id===id);
+      if(handle && handle.dataset.handle==="resize"){
+        dragging = {kind:"shape", mode:"resize", id, startClientX:e.clientX, startClientY:e.clientY, startW:s.w, startH:s.h, rot:(s.rotation||0)*Math.PI/180, pxPerCmX: rect.width/lengthCm(), pxPerCmY: rect.height/widthCm()};
+      } else if(handle && handle.dataset.handle==="rotate"){
+        const wPx=cmToPctX(s.w)/100*rect.width, hPx=cmToPctY(s.h)/100*rect.height;
+        const cx=rect.left+s.x/100*rect.width+wPx/2, cy=rect.top+s.y/100*rect.height+hPx/2;
+        dragging = {kind:"shape", mode:"rotate", id, cx, cy, startAngle:Math.atan2(e.clientY-cy,e.clientX-cx), startRotation:s.rotation||0};
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        if(s.type==="wall"){
+          const wPct=cmToPctX(s.w), hPct=cmToPctY(s.h);
+          const rotNorm = ((Math.round(s.rotation||0)%180)+180)%180;
+          const horizontal = rotNorm < 45 || rotNorm > 135;
+          if(horizontal){
+            const fixedVal = (s.y <= Math.max(0,100-hPct)/2) ? 0 : Math.max(0,100-hPct);
+            dragging = {kind:"shape", mode:"moveWall", id, axis:"y", fixedVal, offX:px-s.x};
+          } else {
+            const fixedVal = (s.x <= Math.max(0,100-wPct)/2) ? 0 : Math.max(0,100-wPct);
+            dragging = {kind:"shape", mode:"moveWall", id, axis:"x", fixedVal, offY:py-s.y};
+          }
+        } else {
+          dragging = {kind:"shape", mode:"move", id, offX:px-s.x, offY:py-s.y};
+        }
+      }
+    }
+    if(!wasAlreadySelected){ renderPanel(); renderCanvas(); }
+    e.preventDefault();
+  }, {passive:false});
+
+  document.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const rect = canvasEl.getBoundingClientRect();
+
+    if(dragging.kind==="note"){
+      const n = state.notes.find(x=>x.id===dragging.id);
+      if(!n) return;
+      if(dragging.mode==="resize"){
+        const dxPct = (e.clientX-dragging.startClientX)/rect.width*100;
+        n.w = Math.max(0.5, dragging.startW+dxPct);
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        n.x = px-dragging.offX; n.y = py-dragging.offY;
+      }
+      renderCanvas();
+      return;
+    }
+
+    if(dragging.kind==="zone"){
+      const z = state.zones.find(x=>x.id===dragging.id);
+      if(!z) return;
+      if(dragging.mode==="resize"){
+        const dxPct = (e.clientX-dragging.startClientX)/rect.width*100;
+        const dyPct = (e.clientY-dragging.startClientY)/rect.height*100;
+        const nw = Math.max(2, dragging.startW+dxPct);
+        const nh = Math.max(2, dragging.startH+dyPct);
+        if(!collidesGroup("zones", z.id, z.x, z.y, nw, nh)){ z.w=nw; z.h=nh; }
+      } else {
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        const nx = px-dragging.offX, ny = py-dragging.offY;
+        if(!collidesGroup("zones", z.id, nx, ny, z.w, z.h)){ z.x=nx; z.y=ny; }
+        else if(!collidesGroup("zones", z.id, nx, z.y, z.w, z.h)){ z.x=nx; }
+        else if(!collidesGroup("zones", z.id, z.x, ny, z.w, z.h)){ z.y=ny; }
+      }
+      renderCanvas();
+      return;
+    }
+
+    if(dragging.kind==="photo"){
+      const ph = state.photos.find(x=>x.id===dragging.id);
+      if(!ph) return;
+      if(dragging.mode==="move"){
+        const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+        const nx = px-dragging.offX, ny = py-dragging.offY;
+        if(!collidesGroupRot("shapesPhotos", ph.id, nx, ny, ph.w, ph.h, ph.rotation)){ ph.x=nx; ph.y=ny; }
+        else if(!collidesGroupRot("shapesPhotos", ph.id, nx, ph.y, ph.w, ph.h, ph.rotation)){ ph.x=nx; }
+        else if(!collidesGroupRot("shapesPhotos", ph.id, ph.x, ny, ph.w, ph.h, ph.rotation)){ ph.y=ny; }
+      } else if(dragging.mode==="resize"){
+        const dx=e.clientX-dragging.startClientX, dy=e.clientY-dragging.startClientY;
+        const cos=Math.cos(dragging.rot), sin=Math.sin(dragging.rot);
+        const localDx=dx*cos+dy*sin, localDy=-dx*sin+dy*cos;
+        const nw=Math.max(0.5, dragging.startW+localDx/dragging.pxPerCmX);
+        const nh=Math.max(0.5, dragging.startH+localDy/dragging.pxPerCmY);
+        if(!collidesGroupRot("shapesPhotos", ph.id, ph.x, ph.y, nw, nh, ph.rotation)){ ph.w=nw; ph.h=nh; }
+      } else if(dragging.mode==="rotate"){
+        const angle=Math.atan2(e.clientY-dragging.cy, e.clientX-dragging.cx);
+        ph.rotation = Math.round(dragging.startRotation + (angle-dragging.startAngle)*180/Math.PI);
+      }
+      renderCanvas();
+      return;
+    }
+
+    const s = state.shapes.find(x=>x.id===dragging.id);
+    if(!s) return;
+    if(dragging.mode==="move"){
+      const px=(e.clientX-rect.left)/rect.width*100, py=(e.clientY-rect.top)/rect.height*100;
+      const nx = px-dragging.offX, ny = py-dragging.offY;
+      if(!collidesGroupRot("shapesPhotos", s.id, nx, ny, s.w, s.h, s.rotation)){ s.x=nx; s.y=ny; }
+      else if(!collidesGroupRot("shapesPhotos", s.id, nx, s.y, s.w, s.h, s.rotation)){ s.x=nx; }
+      else if(!collidesGroupRot("shapesPhotos", s.id, s.x, ny, s.w, s.h, s.rotation)){ s.y=ny; }
+    } else if(dragging.mode==="moveWall"){
+      if(dragging.axis==="y"){
+        const px=(e.clientX-rect.left)/rect.width*100;
+        const nx = px-dragging.offX;
+        if(!collidesGroupRot("shapesPhotos", s.id, nx, dragging.fixedVal, s.w, s.h, s.rotation)){ s.x=nx; s.y=dragging.fixedVal; }
+      } else {
+        const py=(e.clientY-rect.top)/rect.height*100;
+        const ny = py-dragging.offY;
+        if(!collidesGroupRot("shapesPhotos", s.id, dragging.fixedVal, ny, s.w, s.h, s.rotation)){ s.y=ny; s.x=dragging.fixedVal; }
+      }
+    } else if(dragging.mode==="resize"){
+      const dx=e.clientX-dragging.startClientX, dy=e.clientY-dragging.startClientY;
+      const cos=Math.cos(dragging.rot), sin=Math.sin(dragging.rot);
+      const localDx=dx*cos+dy*sin, localDy=-dx*sin+dy*cos;
+      let nw, nh;
+      if(s.type==="circle"){
+        const deltaCm=(localDx/dragging.pxPerCmX + localDy/dragging.pxPerCmY)/2;
+        const d=Math.max(10, dragging.startW+deltaCm);
+        nw=d; nh=d;
+      } else {
+        nw=Math.max(10, dragging.startW+localDx/dragging.pxPerCmX);
+        nh=Math.max(10, dragging.startH+localDy/dragging.pxPerCmY);
+      }
+      if(!collidesGroupRot("shapesPhotos", s.id, s.x, s.y, nw, nh, s.rotation)){
+        s.w=nw; s.h=nh;
+        state.lastShapeSize = {w:s.w, h:s.h};
+      }
+    } else if(dragging.mode==="rotate"){
+      const angle=Math.atan2(e.clientY-dragging.cy, e.clientX-dragging.cx);
+      s.rotation = Math.round(dragging.startRotation + (angle-dragging.startAngle)*180/Math.PI);
+    }
+    renderCanvas();
+  }, {passive:true});
+
+  document.addEventListener("pointerup", ()=>{ if(dragging){ dragging=null; scheduleSave(); renderPanel(); } });
+  document.addEventListener("pointercancel", ()=>{ dragging=null; });
+
+  // ---------- cabecera y toolbar ----------
+  document.getElementById("storeName").addEventListener("input", e=>{ state.storeName=e.target.value; scheduleSave(); });
+  document.getElementById("lengthM").addEventListener("change", e=>{ const v=parseFloat(e.target.value); state.lengthM = (isNaN(v)||v<=0)?state.lengthM:v; scheduleSave(); renderAll(); });
+  document.getElementById("widthM").addEventListener("change", e=>{ const v=parseFloat(e.target.value); state.widthM = (isNaN(v)||v<=0)?state.widthM:v; scheduleSave(); renderAll(); });
+
+  document.getElementById("tsSize").addEventListener("change", e=>{
+    const v=parseFloat(e.target.value); state.textStyle.fontSize = isNaN(v)?state.textStyle.fontSize:v; scheduleSave();
+  });
+  document.getElementById("tsBold").addEventListener("click", ()=>{ state.textStyle.bold = state.textStyle.bold===false; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsItalic").addEventListener("click", ()=>{ state.textStyle.italic = !state.textStyle.italic; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsUnderline").addEventListener("click", ()=>{ state.textStyle.underline = !state.textStyle.underline; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsLeft").addEventListener("click", ()=>{ state.textStyle.align="left"; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsCenter").addEventListener("click", ()=>{ state.textStyle.align="center"; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsRight").addEventListener("click", ()=>{ state.textStyle.align="right"; scheduleSave(); renderHeaderValues(); });
+  document.getElementById("tsFont").addEventListener("change", e=>{ state.textStyle.font=e.target.value; scheduleSave(); });
+
+  function nextSpawnPos(){
+    const n = state.shapes.length + state.notes.length;
+    const cycle = n % 8;
+    return {x: 4 + cycle*5, y: 4 + cycle*5};
+  }
+
+  function getSpawnSize(type){
+    if(state.lastShapeSize) return {w:state.lastShapeSize.w, h:state.lastShapeSize.h};
+    if(type==="wall") return {w:100, h:8};
+    return {w:20, h:20};
+  }
+
+  function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh){
+    return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+  }
+
+  // Cajas (en % del plano) de un grupo de colisión, excluyendo un id (el propio elemento que se mueve/crea).
+  // "shapesPhotos": figuras + fotos entre sí. "zones": zonas entre sí.
+  // Caja de colisión (en % del plano) de una figura/foto teniendo en cuenta su giro real.
+  function cmBoxToPctAABB(xPct, yPct, wCm, hCm, rotDeg){
+    const xCm = xPct/100*lengthCm(), yCm = yPct/100*widthCm();
+    const rad = (rotDeg||0)*Math.PI/180;
+    const cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
+    const aabbWcm = wCm*cos + hCm*sin;
+    const aabbHcm = wCm*sin + hCm*cos;
+    const cxCm = xCm + wCm/2, cyCm = yCm + hCm/2;
+    const x0Cm = cxCm - aabbWcm/2, y0Cm = cyCm - aabbHcm/2;
+    return {
+      x: x0Cm/lengthCm()*100,
+      y: y0Cm/widthCm()*100,
+      w: aabbWcm/lengthCm()*100,
+      h: aabbHcm/widthCm()*100
+    };
+  }
+
+  function getGroupBoxes(group, excludeId){
+    if(group==="zones"){
+      return (state.zones||[]).filter(z=>z.id!==excludeId).map(z=>({x:z.x, y:z.y, w:z.w, h:z.h}));
+    }
+    const shapeBoxes = state.shapes.filter(s=>s.id!==excludeId).map(s=>cmBoxToPctAABB(s.x, s.y, s.w, s.h, s.rotation));
+    const photoBoxes = (state.photos||[]).filter(p=>p.id!==excludeId).map(p=>cmBoxToPctAABB(p.x, p.y, p.w, p.h, p.rotation));
+    return shapeBoxes.concat(photoBoxes);
+  }
+
+  function collidesGroup(group, excludeId, x, y, w, h){
+    return getGroupBoxes(group, excludeId).some(o=>rectsOverlap(x,y,w,h,o.x,o.y,o.w,o.h));
+  }
+
+  // Igual que collidesGroup pero para una figura/foto que también puede estar girada.
+  function collidesGroupRot(group, excludeId, xPct, yPct, wCm, hCm, rotDeg){
+    const box = cmBoxToPctAABB(xPct, yPct, wCm, hCm, rotDeg);
+    return getGroupBoxes(group, excludeId).some(o=>rectsOverlap(box.x,box.y,box.w,box.h,o.x,o.y,o.w,o.h));
+  }
+
+  // Busca un hueco donde el nuevo elemento no se solape con nada del grupo indicado.
+  // Si lockY no es null, solo busca a lo largo del eje X en esa altura fija (para figuras de pared).
+  function findFreeSpawn(group, wPct, hPct, lockY){
+    const maxX = Math.max(0.5, 100-wPct), maxY = Math.max(0.5, 100-hPct);
+    const stepX = Math.max(1.5, wPct*0.5);
+    if(lockY!==null){
+      const y = Math.min(lockY, maxY);
+      for(let x=1; x<=maxX; x+=stepX){
+        if(!collidesGroup(group, null, x, y, wPct, hPct)) return {x, y};
+      }
+      return {x: maxX*Math.random(), y};
+    }
+    const stepY = Math.max(1.5, hPct*0.5);
+    for(let y=1; y<=maxY; y+=stepY){
+      for(let x=1; x<=maxX; x+=stepX){
+        if(!collidesGroup(group, null, x, y, wPct, hPct)) return {x, y};
+      }
+    }
+    return {x: maxX*Math.random(), y: maxY*Math.random()};
+  }
+  function findFreeShapeSpawn(wPct, hPct, lockY){ return findFreeSpawn("shapesPhotos", wPct, hPct, lockY); }
+
+
+  document.getElementById("addRect").addEventListener("click", ()=>{
+    const id=uid(); const size = {w:40, h:40};
+    const p=findFreeShapeSpawn(cmToPctX(size.w), cmToPctY(size.h), null);
+    state.shapes.push({id, type:"column", x:p.x, y:p.y, w:size.w, h:size.h, rotation:0, color:"#1C1B22", label:"Columna"});
+    state.lastShapeSize = {w:size.w, h:size.h};
+    sel={kind:"shape", id}; scheduleSave(); renderAll();
+  });
+  document.getElementById("addCirc").addEventListener("click", ()=>{
+    const id=uid(); const size=getSpawnSize("circle");
+    const d = size.w;
+    const p=findFreeShapeSpawn(cmToPctX(d), cmToPctY(d), null);
+    state.shapes.push({id, type:"circle", x:p.x, y:p.y, w:d, h:d, rotation:0, color:"#1C1B22", label:"Círculo"});
+    state.lastShapeSize = {w:d, h:d};
+    sel={kind:"shape", id}; scheduleSave(); renderAll();
+  });
+  document.getElementById("addWall").addEventListener("click", ()=>{
+    const id=uid(); const size=getSpawnSize("wall");
+    const p=findFreeShapeSpawn(cmToPctX(size.w), cmToPctY(size.h), 0);
+    state.shapes.push({id, type:"wall", x:p.x, y:p.y, w:size.w, h:size.h, rotation:0, color:"#1C1B22", label:"Pared"});
+    state.lastShapeSize = {w:size.w, h:size.h};
+    sel={kind:"shape", id}; scheduleSave(); renderAll();
+  });
+  function addPresetRect(w, h){
+    const id=uid();
+    const p=findFreeShapeSpawn(cmToPctX(w), cmToPctY(h), null);
+    state.shapes.push({id, type:"rect", x:p.x, y:p.y, w, h, rotation:0, color:"#1C1B22", label:"Figura"});
+    state.lastShapeSize = {w, h};
+    sel={kind:"shape", id}; scheduleSave(); renderAll();
+  }
+  document.getElementById("add120").addEventListener("click", ()=>addPresetRect(120, 30));
+  document.getElementById("add60").addEventListener("click", ()=>addPresetRect(60, 30));
+  document.getElementById("addNote").addEventListener("click", ()=>{
+    const id=uid(); const p=nextSpawnPos(); const ts=state.textStyle;
+    state.notes.push({id, text:"", x:p.x, y:p.y, w:20,
+      fontSize:ts.fontSize, bold:ts.bold, italic:ts.italic, underline:ts.underline, align:ts.align, font:ts.font, color:ts.color});
+    sel={kind:"note", id}; editingNoteId=id; scheduleSave(); renderAll();
+  });
+  document.getElementById("addPhoto").addEventListener("click", ()=>{
+    replacePhotoId = null;
+    document.getElementById("photoInput").click();
+  });
+  document.getElementById("photoInput").addEventListener("change", e=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith("image/")){
+      alert("Ese archivo no es una imagen. Elige una foto (jpg, png, heic…).");
+      e.target.value = ""; return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const src = ev.target.result;
+      if(replacePhotoId){
+        const ph = state.photos.find(x=>x.id===replacePhotoId);
+        if(ph){ ph.src = src; scheduleSave(); renderAll(); }
+        replacePhotoId = null;
+      } else {
+        const img = new Image();
+        img.onload = ()=>{
+          const aspect = img.naturalHeight / img.naturalWidth || 1;
+          const wCm = 60, hCm = wCm*aspect;
+          const id = uid();
+          const p = findFreeSpawn("shapesPhotos", cmToPctX(wCm), cmToPctY(hCm), null);
+          state.photos = state.photos||[];
+          state.photos.push({id, src, x:p.x, y:p.y, w:wCm, h:hCm, rotation:0});
+          sel = {kind:"photo", id};
+          scheduleSave(); renderAll();
+        };
+        img.src = src;
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  document.getElementById("addZone").addEventListener("click", ()=>{
+    const id=uid(); const n=(state.zones||[]).length;
+    state.zones = state.zones||[];
+    const p = findFreeSpawn("zones", 35, 35, null);
+    state.zones.push({id, name:"Zona "+(n+1), color:ZONE_COLORS[n%ZONE_COLORS.length], x:p.x, y:p.y, w:35, h:35});
+    sel={kind:"zone", id}; scheduleSave(); renderAll();
+  });
+  document.getElementById("btnClearPlan").addEventListener("click", ()=>{
+    if(confirm("Esto borra todas las figuras, textos y zonas del plano actual. ¿Seguro?")){
+      state.shapes=[]; state.notes=[]; state.zones=[]; state.photos=[]; sel=null; scheduleSave(); renderAll();
+    }
+  });
+
+  function extractZoneAsProject(z){
+    const zXcm = (z.x/100)*lengthCm(), zYcm = (z.y/100)*widthCm();
+    const zWcm = (z.w/100)*lengthCm(), zHcm = (z.h/100)*widthCm();
+    const insideShapes = state.shapes.filter(s=>{
+      const cxCm = (s.x/100)*lengthCm() + s.w/2, cyCm = (s.y/100)*widthCm() + s.h/2;
+      return cxCm>=zXcm && cxCm<=zXcm+zWcm && cyCm>=zYcm && cyCm<=zYcm+zHcm;
+    });
+    const newShapes = insideShapes.map(s=>({...s, id:uid(),
+      x: Math.max(0, (((s.x/100)*lengthCm())-zXcm)/zWcm*100),
+      y: Math.max(0, (((s.y/100)*widthCm())-zYcm)/zHcm*100)
+    }));
+    const insideNotes = state.notes.filter(n=>{
+      const nxPct=n.x, nyPct=n.y;
+      const nxCm=(nxPct/100)*lengthCm(), nyCm=(nyPct/100)*widthCm();
+      return nxCm>=zXcm && nxCm<=zXcm+zWcm && nyCm>=zYcm && nyCm<=zYcm+zHcm;
+    });
+    const newNotes = insideNotes.map(n=>({...n, id:uid(),
+      x: Math.max(0, (((n.x/100)*lengthCm())-zXcm)/zWcm*100),
+      y: Math.max(0, (((n.y/100)*widthCm())-zYcm)/zHcm*100),
+      w: Math.min(90, n.w/zWcm*lengthCm())
+    }));
+    const insidePhotos = (state.photos||[]).filter(ph=>{
+      const cxCm = (ph.x/100)*lengthCm() + ph.w/2, cyCm = (ph.y/100)*widthCm() + ph.h/2;
+      return cxCm>=zXcm && cxCm<=zXcm+zWcm && cyCm>=zYcm && cyCm<=zYcm+zHcm;
+    });
+    const newPhotos = insidePhotos.map(ph=>({...ph, id:uid(),
+      x: Math.max(0, (((ph.x/100)*lengthCm())-zXcm)/zWcm*100),
+      y: Math.max(0, (((ph.y/100)*widthCm())-zYcm)/zHcm*100)
+    }));
+    const id = uid();
+    const newState = {
+      storeName: z.name, lengthM: zWcm/100, widthM: zHcm/100,
+      shapes: newShapes, notes: newNotes, zones: [], photos: newPhotos,
+      textStyle: {...state.textStyle}
+    };
+    const entry = {id, name:z.name, savedAt:Date.now(), data:newState};
+    localStorage.setItem("planos-proyecto:"+id, JSON.stringify(entry));
+    const idx = loadProjectsIndex(); idx.unshift({id, name:z.name, savedAt:entry.savedAt});
+    saveProjectsIndex(idx);
+    alert('Zona extraída como el proyecto "'+z.name+'". Puedes abrirla desde 📁 Proyectos.');
+  }
+
+  function refreshNovedadesGrid(){
+    const grid = document.getElementById("novedadesGrid");
+    const list = state.novedades||[];
+    if(list.length===0){
+      grid.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:var(--muted);font-weight:600;">Aún no hay fotos de novedades esta semana. Pulsa "📷 Añadir foto".</div>';
+      return;
+    }
+    grid.innerHTML = list.map(nv=>
+      '<div class="nov-card" data-nov-id="'+nv.id+'">'+
+        '<img src="'+nv.src+'" />'+
+        '<textarea placeholder="Descripción…" data-nov-caption="'+nv.id+'">'+escapeHtml(nv.caption||"")+'</textarea>'+
+        '<div class="nov-actions"><button class="icon-btn" data-nov-delete="'+nv.id+'" style="color:var(--coral);">🗑</button></div>'+
+      '</div>'
+    ).join("");
+    grid.querySelectorAll("[data-nov-caption]").forEach(ta=>{
+      ta.addEventListener("input", e=>{
+        const nv = state.novedades.find(x=>x.id===ta.dataset.novCaption);
+        if(nv){ nv.caption = e.target.value; scheduleSave(); }
+      });
+    });
+    grid.querySelectorAll("[data-nov-delete]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        state.novedades = state.novedades.filter(x=>x.id!==btn.dataset.novDelete);
+        scheduleSave(); refreshNovedadesGrid();
+      });
+    });
+  }
+
+  document.getElementById("btnNovedades").addEventListener("click", ()=>{
+    document.getElementById("novedadesModalBg").classList.remove("hidden");
+    refreshNovedadesGrid();
+  });
+  document.getElementById("btnCloseNovedades").addEventListener("click", ()=>{
+    document.getElementById("novedadesModalBg").classList.add("hidden");
+  });
+  document.getElementById("btnAddNovedad").addEventListener("click", ()=>{
+    document.getElementById("novedadInput").click();
+  });
+  document.getElementById("novedadInput").addEventListener("change", e=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith("image/")){
+      alert("Ese archivo no es una imagen. Elige una foto (jpg, png, heic…).");
+      e.target.value = ""; return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      state.novedades = state.novedades||[];
+      state.novedades.unshift({id:uid(), src:ev.target.result, caption:""});
+      scheduleSave(); refreshNovedadesGrid();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  function refreshProjectsList(){
+    const projects = loadProjectsIndex().sort((a,b)=>b.savedAt-a.savedAt);
+    const listEl = document.getElementById("projectsList");
+    if(projects.length===0){
+      listEl.innerHTML = '<div style="font-size:13px;color:var(--muted);font-weight:600;">Aún no hay proyectos guardados. Pulsa "➕ Nuevo proyecto" para crear la primera semana.</div>';
+      return;
+    }
+    listEl.innerHTML = projects.map(p=>
+      '<div class="proj-row'+(p.id===currentProjectId?" active":"")+'" data-project-id="'+p.id+'">'+
+        '<div class="pname">'+escapeHtml(p.name)+'<div class="pdate">'+new Date(p.savedAt).toLocaleString("es-ES")+'</div></div>'+
+        '<button class="btn turquoise" data-load-project="'+p.id+'">Abrir</button>'+
+        (p.id!==currentProjectId ? '<button class="btn mint" data-import-project="'+p.id+'">📥 Unir aquí</button>' : '')+
+        '<button class="icon-btn" data-delete-project="'+p.id+'" style="color:var(--coral);">🗑</button>'+
+      '</div>'
+    ).join("");
+    listEl.querySelectorAll("[data-import-project]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const raw = localStorage.getItem("planos-proyecto:"+btn.dataset.importProject);
+        if(!raw) return;
+        const src = JSON.parse(raw).data;
+        const srcLcm = (src.lengthM||20)*100, srcWcm = (src.widthM||10)*100;
+        const offXcm = 30, offYcm = 30; // pequeño desplazamiento para no tapar lo existente
+        const importedShapes = (src.shapes||[]).map(s=>({...s, id:uid(),
+          x: (((s.x/100)*srcLcm)+offXcm)/lengthCm()*100,
+          y: (((s.y/100)*srcWcm)+offYcm)/widthCm()*100
+        }));
+        const importedNotes = (src.notes||[]).map(n=>({...n, id:uid(),
+          x: (((n.x/100)*srcLcm)+offXcm)/lengthCm()*100,
+          y: (((n.y/100)*srcWcm)+offYcm)/widthCm()*100,
+          w: (n.w/100*srcLcm)/lengthCm()*100
+        }));
+        const importedZones = (src.zones||[]).map(z=>({...z, id:uid(),
+          x: (((z.x/100)*srcLcm)+offXcm)/lengthCm()*100,
+          y: (((z.y/100)*srcWcm)+offYcm)/widthCm()*100,
+          w: (z.w/100*srcLcm)/lengthCm()*100,
+          h: (z.h/100*srcWcm)/widthCm()*100
+        }));
+        const importedPhotos = (src.photos||[]).map(ph=>({...ph, id:uid(),
+          x: (((ph.x/100)*srcLcm)+offXcm)/lengthCm()*100,
+          y: (((ph.y/100)*srcWcm)+offYcm)/widthCm()*100
+        }));
+        state.shapes = state.shapes.concat(importedShapes);
+        state.notes = state.notes.concat(importedNotes);
+        state.zones = (state.zones||[]).concat(importedZones);
+        state.photos = (state.photos||[]).concat(importedPhotos);
+        sel=null; editingNoteId=null;
+        scheduleSave(); renderAll();
+        document.getElementById("projectsModalBg").classList.add("hidden");
+      });
+    });
+    listEl.querySelectorAll("[data-load-project]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const raw = localStorage.getItem("planos-proyecto:"+btn.dataset.loadProject);
+        if(raw){
+          const d = JSON.parse(raw).data;
+          d.shapes = (d.shapes||[]).map(s=>({rotation:0, ...s}));
+          d.notes = d.notes||[];
+          d.zones = d.zones||[];
+        d.photos = d.photos||[];
+        d.novedades = d.novedades||[];
+          d.textStyle = d.textStyle || {fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"};
+          state = d;
+          currentProjectId = btn.dataset.loadProject;
+          localStorage.setItem("planos-proyecto-activo", currentProjectId);
+          sel=null; editingNoteId=null;
+          renderHeaderValues(); renderAll(); renderProjectBadge();
+          document.getElementById("projectsModalBg").classList.add("hidden");
+        }
+      });
+    });
+    listEl.querySelectorAll("[data-delete-project]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.dataset.deleteProject;
+        if(!confirm("¿Eliminar este proyecto guardado? No se puede deshacer.")) return;
+        localStorage.removeItem("planos-proyecto:"+id);
+        saveProjectsIndex(loadProjectsIndex().filter(p=>p.id!==id));
+        if(currentProjectId===id){ currentProjectId=null; localStorage.removeItem("planos-proyecto-activo"); renderProjectBadge(); }
+        refreshProjectsList();
+      });
+    });
+  }
+
+  function preparePrint(){
+    sel = null; editingNoteId = null;
+    const t = document.getElementById("printTitle");
+    if(t) t.textContent = state.storeName + " — " + state.lengthM + " m × " + state.widthM + " m";
+    renderCanvas();
+  }
+  document.getElementById("btnPrint").addEventListener("click", ()=>{
+    preparePrint();
+    window.print();
+  });
+  window.addEventListener("beforeprint", preparePrint);
+
+  document.getElementById("btnSaveProject").addEventListener("click", ()=>{
+    const suggested = state.storeName || "Mi proyecto";
+    const name = prompt("¿Con qué nombre quieres guardar este proyecto?", suggested);
+    if(name===null) return;
+    const finalName = name.trim() || suggested;
+    state.storeName = finalName;
+    if(!currentProjectId){
+      currentProjectId = uid();
+      localStorage.setItem("planos-proyecto-activo", currentProjectId);
+      const idx = loadProjectsIndex();
+      idx.unshift({id:currentProjectId, name:finalName, savedAt:Date.now()});
+      saveProjectsIndex(idx);
+    }
+    scheduleSave();
+    renderHeaderValues();
+    renderProjectBadge();
+  });
+
+  document.getElementById("btnProjects").addEventListener("click", ()=>{
+    document.getElementById("projectsModalBg").classList.remove("hidden");
+    refreshProjectsList();
+  });
+  document.getElementById("btnCloseProjects").addEventListener("click", ()=>{
+    document.getElementById("projectsModalBg").classList.add("hidden");
+  });
+  document.getElementById("btnNewProject").addEventListener("click", ()=>{
+    if(state.shapes.length || state.notes.length){
+      if(!confirm("Vas a empezar un proyecto nuevo en blanco. El actual ya está guardado si tiene proyecto asignado; si no, se perderá. ¿Continuar?")) return;
+    }
+    const id = uid();
+    const name = "Semana "+new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit"});
+    state = { storeName:name, lengthM:20, widthM:10, shapes:[], notes:[], zones:[], photos:[], novedades:[],
+      textStyle:{fontSize:14, bold:true, italic:false, underline:false, align:"center", font:"body", color:"#2B2438"} };
+    currentProjectId = id;
+    localStorage.setItem("planos-proyecto-activo", id);
+    const idx = loadProjectsIndex(); idx.unshift({id, name, savedAt:Date.now()});
+    saveProjectsIndex(idx);
+    sel=null; editingNoteId=null;
+    scheduleSave(); renderHeaderValues(); renderAll(); renderProjectBadge();
+  });
+
+  renderHeaderValues();
+  renderAll();
+  renderProjectBadge();
+})();
+</script>
+</body>
+</html>
